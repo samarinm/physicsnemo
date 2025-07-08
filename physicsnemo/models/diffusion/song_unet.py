@@ -444,6 +444,11 @@ class SongUNet(Module):
                 cin = cout
                 cout = model_channels * mult
                 attn = res in attn_resolutions
+
+                # Maxim added:
+                if (idx == 0) and attn:
+                    print(f"Using attention in {level = } at y-resolution {res = }")
+
                 self.enc[f"{res}x{res}_block{idx}"] = UNetBlock(
                     in_channels=cin, out_channels=cout, attention=attn, **block_kwargs
                 )
