@@ -324,6 +324,18 @@ class SongUNet(Module):
             profile_mode=profile_mode,
             amp_mode=amp_mode,
         )
+
+        # Maxim added:
+        print("SongUNet parameters:")
+        print(f"\n\n{img_resolution = },\n{in_channels = },\n{out_channels = },\n{label_dim = },\n{augment_dim = },"
+              f"\n{model_channels = },\n{channel_mult = },\n{channel_mult_emb = },\n{num_blocks = },"
+              f"\n{attn_resolutions = },\n{dropout = },\n{label_dropout = },\n{embedding_type = },"
+              f"\n{channel_mult_noise = },\n{encoder_type = },\n{decoder_type = },\n{resample_filter = },"
+              f"\n{checkpoint_level = },\n{additive_pos_embed = },\n{use_apex_gn = },\n{act = },\n{profile_mode = },"
+              f"\n{amp_mode = }"
+              )
+        print(f"{block_kwargs = }")
+
         self.profile_mode = profile_mode
         self.amp_mode = amp_mode
 
