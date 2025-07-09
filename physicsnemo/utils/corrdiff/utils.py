@@ -178,8 +178,16 @@ def diffusion_step(
             if batch_size == 0:
                 continue
 
+            ########################################################################
+            # Todo: Is there a reason to use fixed seeds as above?
             # Initialize random generator, and generate latents
-            rnd = StackedRandomGenerator(device, batch_seeds)
+            # rnd = StackedRandomGenerator(device, batch_seeds)
+
+            # Maxim added
+            new_batch_seeds = torch.randint(high=1000000, size=batch_seeds.shape)
+            rnd = StackedRandomGenerator(device, new_batch_seeds)
+            ########################################################################
+
             latents = rnd.randn(
                 [
                     img_lr.shape[0],
