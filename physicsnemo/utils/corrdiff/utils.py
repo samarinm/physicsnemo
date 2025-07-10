@@ -295,7 +295,7 @@ class NetCDFWriter:
 ############################################################################
 
 
-def get_time_from_range(times_range, time_format="%Y-%m-%dT%H:%M:%S"):
+def get_time_from_range(times_range, time_format="%Y-%m-%dT%H:%M:%S", skip_leap_day=False):
     """Generates a list of times within a given range.
 
     Args:
@@ -317,5 +317,7 @@ def get_time_from_range(times_range, time_format="%Y-%m-%dT%H:%M:%S"):
     times = [
         t.strftime(time_format)
         for t in time_range(start_time, end_time, interval, inclusive=True)
+        # Maxim added: Skip leap day if specified
+        if (skip_leap_day and (t.day == 29) and (t.month == 2)) == False
     ]
     return times
