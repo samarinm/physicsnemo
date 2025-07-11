@@ -35,7 +35,7 @@ from physicsnemo.distributed import DistributedManager
 from physicsnemo.metrics.diffusion import RegressionLoss, ResidualLoss, RegressionLossCE
 from physicsnemo.utils.patching import RandomPatching2D
 from physicsnemo.launch.logging.wandb import initialize_wandb
-from physicsnemo.launch.logging import PythonLogger, RankZeroLoggingWrapper
+from physicsnemo.launch.logging import LaunchLogger, PythonLogger, RankZeroLoggingWrapper
 from physicsnemo.launch.utils import (
     load_checkpoint,
     save_checkpoint,
@@ -113,8 +113,12 @@ def main(cfg: DictConfig) -> None:
     # Initialize loggers
     if dist.rank == 0:
         writer = SummaryWriter(log_dir="tensorboard")
+
+    LaunchLogger.initialize()
     logger = PythonLogger("main")  # General python logger
+    logger.file_logging()
     logger0 = RankZeroLoggingWrapper(logger, dist)  # Rank 0 logger
+
     initialize_wandb(
         project="Modulus-Launch",
         entity="Modulus",
