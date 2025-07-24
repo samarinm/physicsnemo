@@ -52,6 +52,9 @@ from helpers.train_helpers import (
     is_time_for_periodic_task,
 )
 
+import datetime
+from IPython import embed
+
 torch._dynamo.reset()
 # Increase the cache size limit
 torch._dynamo.config.cache_size_limit = 264  # Set to a higher value
@@ -110,13 +113,15 @@ def main(cfg: DictConfig) -> None:
     DistributedManager.initialize()
     dist = DistributedManager()
 
+    run_date = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")# Set the device for the current process
+
     # Initialize loggers
     if dist.rank == 0:
-        writer = SummaryWriter(log_dir="tensorboard")
+        writer = SummaryWriter(log_dir=os.path.join("tensorboard", f"{cfg.model.name}_{run_date}"))
 
     LaunchLogger.initialize()
     logger = PythonLogger("main")  # General python logger
-    logger.file_logging()
+    logger.file_logging(file_name=f"{cfg.model.name}_{run_date}.log")
     logger0 = RankZeroLoggingWrapper(logger, dist)  # Rank 0 logger
 
     initialize_wandb(
