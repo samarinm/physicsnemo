@@ -274,6 +274,9 @@ def main(cfg: DictConfig) -> None:
     if enable_amp:
         model_args["amp_mode"] = enable_amp
 
+    logger.info('Specified cfg args: ' + ''.join(f'\n{k}:\t{v}' for k, v in vars(cfg).items()))
+    logger.info(f"\n{img_in_channels = }\n{model_args = }\n")
+
     if cfg.model.name == "regression":
         model = UNet(
             img_in_channels=img_in_channels + model_args["N_grid_channels"],
