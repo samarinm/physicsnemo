@@ -171,3 +171,7 @@ multirun/
 
 # SLURM
 slurm-*.out
+
+# DeepDown additions
+*_tmp.txt
+*.DS_Store
