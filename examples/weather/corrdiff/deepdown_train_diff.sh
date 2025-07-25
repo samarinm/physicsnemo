@@ -15,11 +15,10 @@ PERIOD="train-period"
 
 echo "PERIOD: $PERIOD"
 
-REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/eobs_mch_regression/checkpoints_regression/UNet.0.200000.mdlus"
+REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_regression/checkpoints_regression/UNet.0.200000.mdlus"
 
 
 
-pip install pyproj
 
 HYDRA_FULL_ERROR=1
 

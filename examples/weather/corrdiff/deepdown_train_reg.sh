@@ -19,7 +19,6 @@ echo "PERIOD: $PERIOD"
 
 
 
-pip install pyproj
 
 HYDRA_FULL_ERROR=1
 

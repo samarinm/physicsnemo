@@ -14,12 +14,11 @@ TMP_PATH="/mydata/speed2zero/shared/DeepDown/tmp/target_pickle/"
 
 echo "PREDID: $PREDID"
 echo "PERIOD: $PERIOD"
-# Todo check file path below
-REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/eobs_mch_regression/checkpoints_regression/UNet.0.4000000.pt"
-DIFFCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/eobs_mch_diffusion/checkpoints_diffusion/EDMPrecondSR.0.26000000.pt"
+
+REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_regression/checkpoints_regression/UNet.0.4000000.mdlus"
+DIFFCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_diffusion/checkpoints_diffusion/EDMPrecondSR.0.26000000.mdlus"
 PRED="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/predictions/corrdiff_pred_id-"$PREDID"_sample-10_"$PERIOD"_$(date '+%d%m%y_%H%M%S').nc"
 
-pip install pyproj
 
 HYDRA_FULL_ERROR=1
 
