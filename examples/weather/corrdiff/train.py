@@ -360,7 +360,8 @@ def main(cfg: DictConfig) -> None:
                 f"Expected this regression checkpoint but not found: {regression_checkpoint_path}"
             )
         regression_net = Module.from_checkpoint(
-            regression_checkpoint_path, override_args={"use_apex_gn": use_apex_gn}
+            # Todo (fix): Adding argument "use_apex_gn" leads to an error
+            regression_checkpoint_path, #override_args={"use_apex_gn": use_apex_gn}
         )
         regression_net.amp_mode = enable_amp
         regression_net.profile_mode = profile_mode
