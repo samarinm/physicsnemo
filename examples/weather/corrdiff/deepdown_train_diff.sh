@@ -6,7 +6,7 @@ set -e
 #INPUT_TYPE="eobs"
 INPUT_TYPE="coarse"
 
-CONFIG="config_training_"$INPUT_TYPE"_mch_regression.yaml"
+CONFIG="config_training_"$INPUT_TYPE"_mch_diffusion.yaml"
 DATA_PATH="/mydata/speed2zero/shared/DeepDown/"
 STATS_PATH="/myhome/physicsnemo/corrdiff/datasets/stats/stats_"$INPUT_TYPE"_mch.json"
 TMP_PATH="/mydata/speed2zero/shared/DeepDown/tmp/target_pickle/"
@@ -15,7 +15,7 @@ PERIOD="train-period"
 
 echo "PERIOD: $PERIOD"
 
-REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_regression/checkpoints_regression/UNet.0.200000.mdlus"
+REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_regression/checkpoints_regression/UNet.0.1770000.mdlus"
 
 
 

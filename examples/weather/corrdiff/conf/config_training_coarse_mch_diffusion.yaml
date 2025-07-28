@@ -118,6 +118,10 @@ training:
 #        regression_checkpoint_path: <path/to/checkpoint.mdlus>
         # Path to load the regression checkpoint
 
+# Validation dataset options
+validation:
+    period: 'val-period'
+
 # Parameters for wandb logging
 wandb:
     mode: offline
