@@ -16,7 +16,7 @@ echo "PREDID: $PREDID"
 echo "PERIOD: $PERIOD"
 
 REGCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_regression/checkpoints_regression/UNet.0.1770000.mdlus"
-DIFFCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_diffusion/checkpoints_diffusion/EDMPrecondSuperResolution.0.10000.mdlus"
+DIFFCKPT="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/outputs/"$INPUT_TYPE"_mch_diffusion/checkpoints_diffusion/EDMPrecondSuperResolution.0.2030000.mdlus"
 PRED="/mydata/speed2zero/shared/DeepDown/physicsnemo/corrdiff/predictions/corrdiff_pred_id-"$PREDID"_sample-10_"$PERIOD"_$(date '+%d%m%y_%H%M%S').nc"
 
 
