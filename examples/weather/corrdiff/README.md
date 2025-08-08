@@ -15,7 +15,7 @@ Find below a minimal instruction on how to adapt the code to your own datasets. 
 ### I. How to use this implementation
 
 1. Use the following Docker or Singularity image images for running the code in this repository (incorporating the adjustments):
-   - [Docker image](https://hub.docker.com/repository/docker/samarinm/deepdown_corrdiff/general) 
+   - [Docker image](https://hub.docker.com/r/samarinm/deepdown_corrdiff) 
    - [Singularity image](https://polybox.ethz.ch/index.php/s/DatRR8onQyGbwDa)
 2. Copy this repository ([physicsnemo/examples/weather/corrdiff/](https://github.com/samarinm/physicsnemo/tree/main/examples/weather/corrdiff/)) to your local machine or a remote server where you want to run the code.
 
