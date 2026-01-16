@@ -217,7 +217,7 @@ def _load_dataset(data_path, group, variables, period, stack_axis=1, tmp_path='.
     times = np.array([])
 
     if group == 'input':
-        # Load E-OBS data
+        # Load ERA5 data
         for t_enum, target in enumerate(variables):
             if target == 't':
                 data_dir_LR = [os.path.join(data_path, 'ERA5', 'temperature')]
@@ -231,13 +231,13 @@ def _load_dataset(data_path, group, variables, period, stack_axis=1, tmp_path='.
             lon_bnds = [lon_min, lon_max]
             lat_bnds = [lat_min, lat_max]
 
-            data_eobs = load_data(paths=data_dir_LR, date_start=years[0], date_end=years[-1],
+            data_era5 = load_data(paths=data_dir_LR, date_start=years[0], date_end=years[-1],
                                 lon_bnds=lon_bnds, lat_bnds=lat_bnds, levels=[])
 
-            data_LR = data_eobs[target]
+            data_LR = data_era5[target]
 
             # Flip latitude coordinates to range from large to small values
-            data_LR = np.flip(data_LR, 1)
+            # data_LR = np.flip(data_LR, 1)
 
             if target == 't':
                 data_LR -= 273.15
