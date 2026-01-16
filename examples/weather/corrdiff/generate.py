@@ -65,7 +65,10 @@ def main(cfg: DictConfig) -> None:
     logger.file_logging("generate.log")
 
     # Handle the batch size
-    seeds = list(np.arange(cfg.generation.num_ensembles))
+    # Originally, fixed seeds were used for each ensemble member.
+    # seeds = list(np.arange(cfg.generation.num_ensembles))
+    # Use "-1" to indicate random seed for sample.
+    seeds = list([-1]*cfg.generation.num_ensembles)
     num_batches = (
         (len(seeds) - 1) // (cfg.generation.seed_batch_size * dist.world_size) + 1
     ) * dist.world_size

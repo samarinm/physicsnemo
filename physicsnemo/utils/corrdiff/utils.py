@@ -21,6 +21,7 @@ import cftime
 import nvtx
 import torch
 import tqdm
+import numpy as np
 
 from physicsnemo.utils.diffusion import StackedRandomGenerator, time_range
 
@@ -178,15 +179,13 @@ def diffusion_step(
             if batch_size == 0:
                 continue
 
-            ########################################################################
-            # Todo: Is there a reason to use fixed seeds as above?
-            # Initialize random generator, and generate latents
-            # rnd = StackedRandomGenerator(device, batch_seeds)
-
-            # Maxim added
-            new_batch_seeds = torch.randint(high=1000000, size=batch_seeds.shape)
-            rnd = StackedRandomGenerator(device, new_batch_seeds)
-            ########################################################################
+            if np.all(np.array(rank_batches) == -1):
+                # If all seeds are set to -1, generate latents with all random seeds
+                new_batch_seeds = torch.randint(high=1000000, size=batch_seeds.shape)
+                rnd = StackedRandomGenerator(device, new_batch_seeds)
+            else:
+                # Original implementation: Initialize random generator, and generate latents
+                rnd = StackedRandomGenerator(device, batch_seeds)
 
             latents = rnd.randn(
                 [
