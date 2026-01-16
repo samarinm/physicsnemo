@@ -57,6 +57,10 @@ def rename_dimensions_variables(ds):
         ds = ds.rename({'pr': 'tp'})
     if 'tas' in ds.variables:
         ds = ds.rename({'tas': 't'})
+    if 'tasmax' in ds.variables:
+        ds = ds.rename({'tasmax': 't_max'})
+    if 'tasmin' in ds.variables:
+        ds = ds.rename({'tasmin': 't_min'})
 
     return ds
 
