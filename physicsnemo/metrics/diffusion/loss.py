@@ -101,7 +101,12 @@ class VPLoss:
         )
         n = torch.randn_like(y) * sigma
         D_yn = net(y + n, sigma, labels, augment_labels=augment_labels)
-        loss = weight * ((D_yn - y) ** 2)
+
+        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        squared_diff = (D_yn - y) ** 2
+        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+
         return loss
 
     def sigma(
@@ -189,7 +194,12 @@ class VELoss:
         )
         n = torch.randn_like(y) * sigma
         D_yn = net(y + n, sigma, labels, augment_labels=augment_labels)
-        loss = weight * ((D_yn - y) ** 2)
+
+        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        squared_diff = (D_yn - y) ** 2
+        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+
         return loss
 
 
@@ -268,7 +278,12 @@ class EDMLoss:
             )
         else:
             D_yn = net(y + n, sigma, labels, augment_labels=augment_labels)
-        loss = weight * ((D_yn - y) ** 2)
+
+        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        squared_diff = (D_yn - y) ** 2
+        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+
         return loss
 
 
@@ -345,7 +360,12 @@ class EDMLossSR:
 
         n = torch.randn_like(y) * sigma
         D_yn = net(y + n, y_lr, sigma, labels, augment_labels=augment_labels)
-        loss = weight * ((D_yn - y) ** 2)
+
+        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        squared_diff = (D_yn - y) ** 2
+        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+
         return loss
 
 
@@ -463,7 +483,14 @@ class RegressionLoss:
                 augment_labels=augment_labels,
             )
 
-        loss = weight * ((D_yn - y) ** 2)
+        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+
+        # Compute squared difference
+        squared_diff = (D_yn - y) ** 2
+
+        # Apply mask: set NaN positions to 0 so they do not contribute to loss
+        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
 
         return loss
 
@@ -770,7 +797,11 @@ class ResidualLoss:
                 ),
                 augment_labels=augment_labels,
             )
-        loss = weight * ((D_yn - y) ** 2)
+
+        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        squared_diff = (D_yn - y) ** 2
+        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
 
         return loss
 
@@ -909,7 +940,12 @@ class VELoss_dfsr:
         x = images * a.sqrt() + e * (1.0 - a).sqrt()
 
         output = net(x, t, labels)
-        loss = (e - output).square()
+
+        # Create mask for valid (non-NaN) pixels in both images and predictions
+        # Note: e is random noise and won't have NaNs, but images might
+        valid_mask = ~(torch.isnan(images) | torch.isnan(output))
+        squared_diff = (e - output).square()
+        loss = torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
 
         return loss
 
@@ -1047,12 +1083,20 @@ class RegressionLossCE:
                 lead_time_label=lead_time_label,
                 augment_labels=augment_labels,
             )
-        loss1 = weight * (D_yn[:, scalar_channels] - y[:, scalar_channels]) ** 2
-        loss2 = (
-            weight
-            * self.entropy(D_yn[:, self.prob_channels], y[:, self.prob_channels])[
-                :, None
-            ]
-        )
+        # Squared error loss for scalar channels with NaN masking
+        y_scalar = y[:, scalar_channels]
+        D_yn_scalar = D_yn[:, scalar_channels]
+        valid_mask_scalar = ~(torch.isnan(y_scalar) | torch.isnan(D_yn_scalar))
+        squared_diff_scalar = (D_yn_scalar - y_scalar) ** 2
+        loss1 = weight * torch.where(valid_mask_scalar, squared_diff_scalar, torch.zeros_like(squared_diff_scalar))
+
+        # Cross entropy loss for probability channels with NaN masking
+        y_prob = y[:, self.prob_channels]
+        D_yn_prob = D_yn[:, self.prob_channels]
+        # Check if any prob channel has NaN at each (B, H, W) position
+        valid_mask_prob = ~(torch.isnan(y_prob).any(dim=1, keepdim=True) | torch.isnan(D_yn_prob).any(dim=1, keepdim=True))
+        ce_loss = self.entropy(D_yn_prob, y_prob)[:, None]
+        loss2 = weight * torch.where(valid_mask_prob, ce_loss, torch.zeros_like(ce_loss))
+
         loss = torch.cat((loss1, loss2), dim=1)
         return loss
