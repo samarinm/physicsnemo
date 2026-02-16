@@ -237,7 +237,8 @@ def _load_dataset(data_path, group, variables, period, stack_axis=1, tmp_path='.
             data_LR = data_era5[target]
 
             # Flip latitude coordinates to range from large to small values
-            # data_LR = np.flip(data_LR, 1)
+            # Todo: In first training runs, this flip was erroneously applied. Undo for next runs.
+            data_LR = np.flip(data_LR, 1)
 
             if target == 't':
                 data_LR -= 273.15
