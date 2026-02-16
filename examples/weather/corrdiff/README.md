@@ -15,20 +15,27 @@ Find below a minimal instruction on how to adapt the code to your own datasets. 
 ### I. How to use this implementation
 
 1. Use the following Docker or Singularity image images for running the code in this repository (incorporating the adjustments):
-   - [Docker image](https://hub.docker.com/r/samarinm/deepdown_corrdiff) 
-   - [Singularity image](https://polybox.ethz.ch/index.php/s/DatRR8onQyGbwDa)
+   - [Docker image](https://hub.docker.com/r/samarinm/deepdown_corrdiff) (use 0.2)
+   - [Singularity image](https://polybox.ethz.ch/index.php/s/DatRR8onQyGbwDa) (corresponding to 0.2)
 2. Copy this repository ([physicsnemo/examples/weather/corrdiff/](https://github.com/samarinm/physicsnemo/tree/main/examples/weather/corrdiff/)) to your local machine or a remote server where you want to run the code.
 
 ### II. How to test pretrained models
 
-For Switzerland, you can try one of our pretrained CorrDiff models for MeteoSwiss grid-data products (interpolated observational data) providing daily (surface) data for average temperature, minimum temperature, maximum temperature, and total precipitation (check the documentation on the [temperature data](https://www.meteoswiss.admin.ch/dam/jcr:818a4d17-cb0c-4e8b-92c6-1a1bdf5348b7/ProdDoc_TabsD.pdf) and [precipitation data](https://www.meteoswiss.admin.ch/dam/jcr:4f51f0f1-0fe3-48b5-9de0-15666327e63c/ProdDoc_RhiresD.pdf) for more details). The model is trained to downscale the **coarsened MeteoSwiss datasets** (pooling of 8x8 pixels) to the original resolution, i.e. tensors of shape `(num_samples, 4, 30, 52)` to `(num_samples, 4, 240, 416)`. The model specification is provided in [conf/base/model_size/normal_MCH.yaml](conf/base/model_size/normal_MCH.yaml) (see illustration and table below).
+For Switzerland, you can try one of our pretrained CorrDiff models for MeteoSwiss grid-data products (interpolated observational data) providing daily (surface) data for average temperature, minimum temperature, maximum temperature, and total precipitation (check the documentation on the [temperature data](https://www.meteoswiss.admin.ch/dam/jcr:818a4d17-cb0c-4e8b-92c6-1a1bdf5348b7/ProdDoc_TabsD.pdf) and [precipitation data](https://www.meteoswiss.admin.ch/dam/jcr:4f51f0f1-0fe3-48b5-9de0-15666327e63c/ProdDoc_RhiresD.pdf) for more details). The model is trained to downscale two settings:
+
+A. **coarsened MeteoSwiss datasets** (pooling of 8x8 pixels) to the **original resolution** for target variables of average temperature, minimum temperature, maximum temperature, and total precipitation (i.e. `num_targets=4`).
+
+B. **ERA5** to **MeteoSwiss datasets** (original resolution) for target variables of average temperature and total precipitation (i.e. `num_targets=2`).
+
+In both examples, the tensors are of shape `(num_samples, num_targets, 30, 52)` to `(num_samples, num_targets, 240, 416)`.
+The model specification is provided in [conf/base/model_size/normal_MCH.yaml](conf/base/model_size/normal_MCH.yaml) (see illustration and table below).
 
 1. Download the [pretrained regression and diffusion model weights](https://polybox.ethz.ch/index.php/s/mxNLiAFXT9cGRgb) (about 1.8 GB). For this, click on `Download all files` in the top right corner of the linked page and merge the `corrdiff` folder with the local copy of this repository.
-2. Use the provided [deepdown_gen.sh](deepdown_gen.sh) script to generation downscaled samples for the provided coarse-scale input of shape `(num_samples, 4, 30, 52)`. For this, you will need to adjust the following:
-   - All absolute paths in [deepdown_gen.sh](deepdown_gen.sh).
-   - The output path in [conf/config_generate_coarse_mch.yaml#L23](conf/config_generate_coarse_mch.yaml#L23)
-   - The data path in [conf/config_generate_coarse_mch.yaml#L53](conf/config_generate_coarse_mch.yaml#L53)
-   - The dates to generate for in [conf/config_generate_coarse_mch.yaml#L84-L91](conf/config_generate_coarse_mch.yaml#L84-L91). You can either specify individual `times`  or a `times_range`. One of them has to be set to `null`.
+2. Use the provided [deepdown_gen.sh](deepdown_gen.sh) script to generation downscaled samples for the provided coarse-scale input of shape `(num_samples, num_targets, 30, 52)`. For this, you will need to adjust the following:
+   - All absolute paths in [deepdown_gen.sh](deepdown_gen.sh) (setting A) or [deepdown_gen_t-tp.sh](deepdown_gen_t-tp.sh) (setting B).
+   - The output path in [conf/config_generate_coarse_mch.yaml#L23](conf/config_generate_coarse_mch.yaml#L23) (A) or [conf/config_generate_era5_mch.yaml#L23](conf/config_generate_era5_mch.yaml#L23) (B).
+   - The data path in [conf/config_generate_coarse_mch.yaml#L53](conf/config_generate_coarse_mch.yaml#L53) (A) or [conf/config_generate_era5_mch.yaml#L53](conf/config_generate_era5_mch.yaml#L54) (B).
+   - The dates to generate for in [conf/config_generate_coarse_mch.yaml#L84-L91](conf/config_generate_coarse_mch.yaml#L84-L91) (A) or [conf/config_generate_era5_mch.yaml#L85-L92](conf/config_generate_era5_mch.yaml#L84-L91) (B). You can either specify individual `times`  or a `times_range`. One of them has to be set to `null`.
 
 For this to work, you are expected to have access to the MeteoSwiss grid-data products and are able to load the data as specified in [datasets/coarse_mch.py#L204-L216](datasets/coarse_mch.py#L204-L216). If this is not the case, you can follow the instructions below to use your own dataset.
 
