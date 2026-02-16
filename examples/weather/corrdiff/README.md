@@ -33,9 +33,9 @@ The model specification is provided in [conf/base/model_size/normal_MCH.yaml](co
 1. Download the [pretrained regression and diffusion model weights](https://polybox.ethz.ch/index.php/s/mxNLiAFXT9cGRgb) (about 1.8 GB). For this, click on `Download all files` in the top right corner of the linked page and merge the `corrdiff` folder with the local copy of this repository.
 2. Use the provided [deepdown_gen.sh](deepdown_gen.sh) script to generation downscaled samples for the provided coarse-scale input of shape `(num_samples, num_targets, 30, 52)`. For this, you will need to adjust the following:
    - All absolute paths in [deepdown_gen.sh](deepdown_gen.sh) (setting A) or [deepdown_gen_t-tp.sh](deepdown_gen_t-tp.sh) (setting B).
-   - The output path in [conf/config_generate_coarse_mch.yaml#L23](conf/config_generate_coarse_mch.yaml#L23) (A) or [conf/config_generate_era5_mch.yaml#L23](conf/config_generate_era5_mch.yaml#L23) (B).
-   - The data path in [conf/config_generate_coarse_mch.yaml#L53](conf/config_generate_coarse_mch.yaml#L53) (A) or [conf/config_generate_era5_mch.yaml#L53](conf/config_generate_era5_mch.yaml#L54) (B).
-   - The dates to generate for in [conf/config_generate_coarse_mch.yaml#L84-L91](conf/config_generate_coarse_mch.yaml#L84-L91) (A) or [conf/config_generate_era5_mch.yaml#L85-L92](conf/config_generate_era5_mch.yaml#L84-L91) (B). You can either specify individual `times`  or a `times_range`. One of them has to be set to `null`.
+   - The output path in [conf/config_generate_coarse_mch.yaml#L23](conf/config_generate_coarse_mch.yaml#L23) (A) or [conf/config_generate_era5_mch_t-tp.yaml#L23](conf/config_generate_era5_mch_t-tp.yaml#L23) (B).
+   - The data path in [conf/config_generate_coarse_mch.yaml#L53](conf/config_generate_coarse_mch.yaml#L53) (A) or [conf/config_generate_era5_mch_t-tp.yaml#L53](conf/config_generate_era5_mch_t-tp.yaml#L54) (B).
+   - The dates to generate for in [conf/config_generate_coarse_mch.yaml#L84-L91](conf/config_generate_coarse_mch.yaml#L84-L91) (A) or [conf/config_generate_era5_mch_t-tp.yaml#L85-L92](conf/config_generate_era5_mch_t-tp.yaml#L84-L91) (B). You can either specify individual `times`  or a `times_range`. One of them has to be set to `null`.
 
 For this to work, you are expected to have access to the MeteoSwiss grid-data products and are able to load the data as specified in [datasets/coarse_mch.py#L204-L216](datasets/coarse_mch.py#L204-L216). If this is not the case, you can follow the instructions below to use your own dataset.
 
