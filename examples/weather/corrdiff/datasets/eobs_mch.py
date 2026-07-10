@@ -44,6 +44,10 @@ from deepdown_simple_data_loader import load_target_data, load_data
 
 dataloader_logging = PythonLogger("dataloader")
 
+# Variables that get a log1p/expm1 (i.e. log(1+x) ) transform before/after affine
+# (de)normalization, e.g. precipitation ("tp") which is heavily skewed.
+LOG_TRANSFORM_VARIABLES = {"tp"}
+
 
 class eobsMchDataset(DownscalingDataset):
     """Custom reader for E-OBS - MeteoSwiss data pairs over Switzerland."""
@@ -100,6 +104,17 @@ class eobsMchDataset(DownscalingDataset):
             stats, self.output_variables, "output"
         )
 
+        # Channels to log-transform (log1p/expm1) before/after affine
+        # (de)normalization.
+        # NOTE: the mean/std in `stats_path` for these variables
+        # must be computed on the log1p-transformed data, not raw data.
+        self.input_log_idx = [
+            i for i, v in enumerate(self.input_variables) if v in LOG_TRANSFORM_VARIABLES
+        ]
+        self.output_log_idx = [
+            i for i, v in enumerate(self.output_variables) if v in LOG_TRANSFORM_VARIABLES
+        ]
+
     def __getitem__(self, idx):
         """Return the data sample (output, input) at index idx."""
         x = self.upsample(self.input[idx].copy())
@@ -154,19 +169,29 @@ class eobsMchDataset(DownscalingDataset):
 
     def normalize_input(self, x: np.ndarray) -> np.ndarray:
         """Convert input from physical units to normalized data."""
+        # Transform channels only contained in self.input_log_idx
+        x = _log1p_channels(x, self.input_log_idx)
         return (x - self.input_mean) / self.input_std
 
     def denormalize_input(self, x: np.ndarray) -> np.ndarray:
         """Convert input from normalized data to physical units."""
-        return x * self.input_std + self.input_mean
+        x = x * self.input_std + self.input_mean
+        # Transform channels only contained in self.input_log_idx
+        x =_expm1_channels(x, self.input_log_idx)
+        return x
 
     def normalize_output(self, x: np.ndarray) -> np.ndarray:
         """Convert output from physical units to normalized data."""
+        # Transform channels only contained in self.output_log_idx
+        x = _log1p_channels(x, self.output_log_idx)
         return (x - self.output_mean) / self.output_std
 
     def denormalize_output(self, x: np.ndarray) -> np.ndarray:
         """Convert output from normalized data to physical units."""
-        return x * self.output_std + self.output_mean
+        x = x * self.output_std + self.output_mean
+        # Transform channels only contained in self.output_log_idx
+        x = _expm1_channels(x, self.output_log_idx)
+        return x
 
     def upsample(self, x):
         """Extend x around edges with linear extrapolation."""
@@ -314,17 +339,34 @@ def _load_dataset(data_path, group, variables, period, stack_axis=1, tmp_path='.
         # Todo for invariant variables: Loading
         pass
 
-    if np.any(np.isnan(data)):
-        dataloader_logging.info(f"NaN values are set to 0"
-                                f" if any pixel for any variables is NaN!\n")
-        # Extract the mask of NaN values -> include if any pixel for any variables is NaN
-        nanmask = np.any(np.isnan(data), axis=(0,1)).astype(bool)
-        data[:,:,nanmask] = 0.0
-
-        # dataloader_logging.info(f"NaN values in the {group} data are set to 0!")
-        # data = np.nan_to_num(data, nan=0.0)
+    # if np.any(np.isnan(data)):
+    #     dataloader_logging.info(f"NaN values are set to 0"
+    #                             f" if any pixel for any variables is NaN!\n")
+    #     # Extract the mask of NaN values -> include if any pixel for any variables is NaN
+    #     nanmask = np.any(np.isnan(data), axis=(0,1)).astype(bool)
+    #     data[:,:,nanmask] = 0.0
+    #
+    #     # dataloader_logging.info(f"NaN values in the {group} data are set to 0!")
+    #     # data = np.nan_to_num(data, nan=0.0)
 
     return (data, variables, times)
+
+
+def _log1p_channels(x: np.ndarray, channel_idx: List[int]) -> np.ndarray:
+    """Apply log1p to the given channels (axis 0) of x, leaving others untouched."""
+    if not channel_idx:
+        return x
+    x = x.copy()
+    x[channel_idx] = np.log1p(x[channel_idx])
+    return x
+
+
+def _expm1_channels(x: np.ndarray, channel_idx: List[int]) -> np.ndarray:
+    """Apply expm1 to the given channels (axis 0) of x, leaving others untouched."""
+    if not channel_idx:
+        return x
+    x[channel_idx] = np.expm1(x[channel_idx])
+    return x
 
 
 def _load_stats(stats, variables, group):
