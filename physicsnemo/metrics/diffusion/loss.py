@@ -99,13 +99,19 @@ class VPLoss:
         y, augment_labels = (
             augment_pipe(images) if augment_pipe is not None else (images, None)
         )
+
+        # Sanitize NaNs before the network call so they cannot propagate
+        # through the network, and use nan_to_num (zero local gradient) so
+        # masking cannot leak NaN gradients.
+        nan_mask_y = torch.isnan(y)
+        y = torch.nan_to_num(y, nan=0.0)
         n = torch.randn_like(y) * sigma
         D_yn = net(y + n, sigma, labels, augment_labels=augment_labels)
 
-        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
-        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        valid_mask = ~(nan_mask_y | torch.isnan(D_yn))
+        D_yn = torch.nan_to_num(D_yn, nan=0.0)
         squared_diff = (D_yn - y) ** 2
-        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = weight * valid_mask * squared_diff
 
         return loss
 
@@ -192,13 +198,19 @@ class VELoss:
         y, augment_labels = (
             augment_pipe(images) if augment_pipe is not None else (images, None)
         )
+
+        # Sanitize NaNs before the network call so they cannot propagate
+        # through the network, and use nan_to_num (zero local gradient) so
+        # masking cannot leak NaN gradients.
+        nan_mask_y = torch.isnan(y)
+        y = torch.nan_to_num(y, nan=0.0)
         n = torch.randn_like(y) * sigma
         D_yn = net(y + n, sigma, labels, augment_labels=augment_labels)
 
-        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
-        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        valid_mask = ~(nan_mask_y | torch.isnan(D_yn))
+        D_yn = torch.nan_to_num(D_yn, nan=0.0)
         squared_diff = (D_yn - y) ** 2
-        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = weight * valid_mask * squared_diff
 
         return loss
 
@@ -267,6 +279,12 @@ class EDMLoss:
         y, augment_labels = (
             augment_pipe(images) if augment_pipe is not None else (images, None)
         )
+
+        # Sanitize NaNs before the network call so they cannot propagate
+        # through the network, and use nan_to_num (zero local gradient) so
+        # masking cannot leak NaN gradients.
+        nan_mask_y = torch.isnan(y)
+        y = torch.nan_to_num(y, nan=0.0)
         n = torch.randn_like(y) * sigma
         if condition is not None:
             D_yn = net(
@@ -279,10 +297,10 @@ class EDMLoss:
         else:
             D_yn = net(y + n, sigma, labels, augment_labels=augment_labels)
 
-        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
-        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        valid_mask = ~(nan_mask_y | torch.isnan(D_yn))
+        D_yn = torch.nan_to_num(D_yn, nan=0.0)
         squared_diff = (D_yn - y) ** 2
-        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = weight * valid_mask * squared_diff
 
         return loss
 
@@ -358,13 +376,18 @@ class EDMLossSR:
         y = y_tot[:, : img_clean.shape[1], :, :]
         y_lr = y_tot[:, img_clean.shape[1] :, :, :]
 
+        # Sanitize NaNs before the network call so they cannot propagate
+        # through the network, and use nan_to_num (zero local gradient) so
+        # masking cannot leak NaN gradients.
+        nan_mask_y = torch.isnan(y)
+        y = torch.nan_to_num(y, nan=0.0)
         n = torch.randn_like(y) * sigma
         D_yn = net(y + n, y_lr, sigma, labels, augment_labels=augment_labels)
 
-        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
-        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        valid_mask = ~(nan_mask_y | torch.isnan(D_yn))
+        D_yn = torch.nan_to_num(D_yn, nan=0.0)
         squared_diff = (D_yn - y) ** 2
-        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = weight * valid_mask * squared_diff
 
         return loss
 
@@ -483,14 +506,14 @@ class RegressionLoss:
                 augment_labels=augment_labels,
             )
 
-        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
+        # Sanitize NaNs (via nan_to_num, whose gradient is zero at the
+        # replaced positions) before computing the diff, so masking cannot
+        # leak NaN gradients.
         valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
-
-        # Compute squared difference
+        y = torch.nan_to_num(y, nan=0.0)
+        D_yn = torch.nan_to_num(D_yn, nan=0.0)
         squared_diff = (D_yn - y) ** 2
-
-        # Apply mask: set NaN positions to 0 so they do not contribute to loss
-        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = weight * valid_mask * squared_diff
 
         return loss
 
@@ -762,6 +785,12 @@ class ResidualLoss:
             y = y_patched
             y_lr = y_lr_patched
 
+        # Sanitize NaNs before the network call so they cannot propagate
+        # through the network, and use nan_to_num (zero local gradient) so
+        # masking cannot leak NaN gradients.
+        nan_mask_y = torch.isnan(y)
+        y = torch.nan_to_num(y, nan=0.0)
+
         # Noise
         rnd_normal = torch.randn([y.shape[0], 1, 1, 1], device=img_clean.device)
         sigma = (rnd_normal * self.P_std + self.P_mean).exp()
@@ -798,10 +827,10 @@ class ResidualLoss:
                 augment_labels=augment_labels,
             )
 
-        # Create mask for valid (non-NaN) pixels in both ground truth and predictions
-        valid_mask = ~(torch.isnan(y) | torch.isnan(D_yn))
+        valid_mask = ~(nan_mask_y | torch.isnan(D_yn))
+        D_yn = torch.nan_to_num(D_yn, nan=0.0)
         squared_diff = (D_yn - y) ** 2
-        loss = weight * torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = weight * valid_mask * squared_diff
 
         return loss
 
@@ -934,6 +963,13 @@ class VELoss_dfsr:
             low=0, high=self.num_timesteps, size=(images.size(0) // 2 + 1,)
         ).to(images.device)
         t = torch.cat([t, self.num_timesteps - t - 1], dim=0)[: images.size(0)]
+
+        # Sanitize NaNs before the network call so they cannot propagate
+        # through the network, and use nan_to_num (zero local gradient) so
+        # masking cannot leak NaN gradients.
+        nan_mask_images = torch.isnan(images)
+        images = torch.nan_to_num(images, nan=0.0)
+
         e = torch.randn_like(images)
         b = self.betas.to(images.device)
         a = (1 - b).cumprod(dim=0).index_select(0, t).view(-1, 1, 1, 1)
@@ -941,11 +977,11 @@ class VELoss_dfsr:
 
         output = net(x, t, labels)
 
-        # Create mask for valid (non-NaN) pixels in both images and predictions
         # Note: e is random noise and won't have NaNs, but images might
-        valid_mask = ~(torch.isnan(images) | torch.isnan(output))
+        valid_mask = ~(nan_mask_images | torch.isnan(output))
+        output = torch.nan_to_num(output, nan=0.0)
         squared_diff = (e - output).square()
-        loss = torch.where(valid_mask, squared_diff, torch.zeros_like(squared_diff))
+        loss = valid_mask * squared_diff
 
         return loss
 
@@ -1083,20 +1119,26 @@ class RegressionLossCE:
                 lead_time_label=lead_time_label,
                 augment_labels=augment_labels,
             )
-        # Squared error loss for scalar channels with NaN masking
+        # Squared error loss for scalar channels with NaN masking. Sanitize
+        # via nan_to_num (zero local gradient at replaced positions) before
+        # computing the diff, so masking cannot leak NaN gradients.
         y_scalar = y[:, scalar_channels]
         D_yn_scalar = D_yn[:, scalar_channels]
         valid_mask_scalar = ~(torch.isnan(y_scalar) | torch.isnan(D_yn_scalar))
+        y_scalar = torch.nan_to_num(y_scalar, nan=0.0)
+        D_yn_scalar = torch.nan_to_num(D_yn_scalar, nan=0.0)
         squared_diff_scalar = (D_yn_scalar - y_scalar) ** 2
-        loss1 = weight * torch.where(valid_mask_scalar, squared_diff_scalar, torch.zeros_like(squared_diff_scalar))
+        loss1 = weight * valid_mask_scalar * squared_diff_scalar
 
         # Cross entropy loss for probability channels with NaN masking
         y_prob = y[:, self.prob_channels]
         D_yn_prob = D_yn[:, self.prob_channels]
         # Check if any prob channel has NaN at each (B, H, W) position
         valid_mask_prob = ~(torch.isnan(y_prob).any(dim=1, keepdim=True) | torch.isnan(D_yn_prob).any(dim=1, keepdim=True))
+        y_prob = torch.nan_to_num(y_prob, nan=0.0)
+        D_yn_prob = torch.nan_to_num(D_yn_prob, nan=0.0)
         ce_loss = self.entropy(D_yn_prob, y_prob)[:, None]
-        loss2 = weight * torch.where(valid_mask_prob, ce_loss, torch.zeros_like(ce_loss))
+        loss2 = weight * valid_mask_prob * ce_loss
 
         loss = torch.cat((loss1, loss2), dim=1)
         return loss
